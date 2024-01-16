@@ -2,8 +2,8 @@
 
 set -e
 
-if [ -x "../snap" ]; then
-        SNAPSHOT=./snap
+if [ -x "../snapshot" ]; then
+        SNAPSHOT=./snapshot
 elif go version >/dev/null 2>&1; then
         SNAPSHOT="go run ../"
 else
