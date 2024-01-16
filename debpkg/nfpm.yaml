@@ -1,0 +1,51 @@
+name: "vgkeydesk-snap"
+arch: "amd64"
+platform: "linux"
+version: ${PACKAGE_VERSION}
+section: "default"
+priority: "optional"
+release: ${PACKAGE_RELEASE}
+
+provides:
+- vgkeydesk-snap
+depends:
+- vgkeydesk-snap-access
+- vgkeydesk-snap-auth
+
+maintainer: "Ingmund Ollson <ingmund@proton.me>"
+description: VPNGen keydesk snaphot service
+vendor: "VPNGen"
+homepage: "http://vpngen.org"
+license: "LGPL"
+
+contents:
+- dst: /opt/vgkeydesk-snap
+  type: dir
+  file_info:
+    mode: 0111
+    owner: root
+    group: root
+- src: bin/snapshot
+  dst: /opt/vgkeydesk-snap/snapshot
+  file_info:
+    mode: 0005
+    owner: root
+    group: root
+- src: keydesk-snap/cmd/fetchsnaps/fetchsnaps.sh
+  dst: /opt/vgkeydesk-snap/fetchsnaps.sh
+  file_info:
+    mode: 0005
+    owner: root
+    group: root
+- src: keydesk-snap/cmd/sshcmd/ssh_command.sh
+  dst: /opt/vgkeydesk-snap/ssh_command.sh
+  file_info:
+    mode: 0005
+    owner: root
+    group: root
+
+deb:
+  compression: xz
+  breaks:
+  - vgkeydesk (<< 1.0.0)
+
