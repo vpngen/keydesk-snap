@@ -9,7 +9,6 @@ release: ${PACKAGE_RELEASE}
 provides:
 - vgkeydesk-snap
 depends:
-- vgkeydesk-snap-access
 - vgkeydesk-snap-auth
 
 maintainer: "Ingmund Ollson <ingmund@proton.me>"
