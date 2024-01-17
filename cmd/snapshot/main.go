@@ -247,6 +247,10 @@ func parseArgs() (*CommandOpts, error) {
 		if *filedbDir == "" {
 			dbdir = filepath.Join(storage.DefaultHomeDir, id)
 		}
+
+		if *etcDir == "" {
+			etcdir = DefaultSnapEtcDir
+		}
 	default:
 		id = *brigadeID
 
@@ -257,6 +261,10 @@ func parseArgs() (*CommandOpts, error) {
 
 		if *filedbDir == "" {
 			dbdir = cwd
+		}
+
+		if *etcDir == "" {
+			etcdir = cwd
 		}
 	}
 
