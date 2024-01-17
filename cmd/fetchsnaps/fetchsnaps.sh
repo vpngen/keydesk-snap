@@ -13,9 +13,7 @@ else
         exit 1
 fi
 
-
-if [ "root" != "$(whoami)" ]; then
-        echo "DEBUG EXECUTION" >&2
+if [ "$(whoami)" != "_onotole_" ]; then
         DEBUG="yes"
 fi
 
@@ -36,12 +34,12 @@ EOF
 printdef () {
         msg="$1"
 
-        echo "Usage: echo \"\$PSK\" | $0 -tag <tag> -stime <global_snapshot_at> -mnt <maintenance_till> -list <brigade_id, ...>" >&2
+        echo "Usage: echo \"\$PSK\" | $0 -tag <tag> -stime <global_snapshot_at> -rfp <realm key FP> -mnt <maintenance_till> -list <brigade_id, ...>" >&2
         
         fatal "400" "Bad request" "$msg"
 }
 
-PSK=$(cat <&0)
+PSK=$(dd bs=64 count=1 iflag=nonblock status=none)
 if [ -z "${PSK}" ]; then
         printdef "PSK is empty"
 fi
@@ -129,13 +127,23 @@ if [ -z "${BRIGADES}" ]; then
         printdef "BRIGADES is empty"
 fi
 
-DB_DIR=${DB_DIR:-"../../../vpngen-keydesk/cmd/keydesk"}
-DB_DIR="$(realpath "${DB_DIR}")"
-DB_DIR="-d ${DB_DIR}"
+if [ -n "${DEBUG}" ]; then
+        DB_DIR=${DB_DIR:-"../../../vpngen-keydesk/cmd/keydesk"}
+        if [ ! -d "${DB_DIR}" ]; then
+                printdef "DB_DIR is not a directory"
+        fi
 
-CONF_DIR=${CONF_DIR:-"../../core/crypto/testdata"}
-CONF_DIR="$(realpath "${CONF_DIR}")"
-CONF_DIR="-c ${CONF_DIR}"
+        DB_DIR="$(realpath "${DB_DIR}")"
+        DB_DIR="-d ${DB_DIR}"
+
+        CONF_DIR=${CONF_DIR:-"../../core/crypto/testdata"}
+        if [ ! -d "${CONF_DIR}" ]; then
+                printdef "CONF_DIR is not a directory"
+        fi
+        
+        CONF_DIR="$(realpath "${CONF_DIR}")"
+        CONF_DIR="-c ${CONF_DIR}"
+fi
 
 for id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
         n="$(echo "${id}=======" | base32 -d 2>/dev/null | wc -c 2>/dev/null)"
