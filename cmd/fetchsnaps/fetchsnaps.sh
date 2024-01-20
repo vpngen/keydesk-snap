@@ -153,14 +153,9 @@ for id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
 done
 
 SNAPSHOT_ARRAY="{ \"snaps\" : ["
-NOT_FIRST_SNAP=""
+NOT_FIRST_SNAP=" "
 
 for brigade_id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
-        if [ -n "${NOT_FIRST_SNAP}" ]; then
-                NOT_FIRST_SNAP="x"
-                SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY},"
-        fi
-
         if [ -z "${DEBUG}" ]; then
                 # shellcheck disable=SC2086
                 SNAPSHOT="$(printf "%s" "$PSK" | sudo -u "${brigade_id}" -g "${brigade_id}" ${SNAP_APP_BIN} \
@@ -183,10 +178,11 @@ for brigade_id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
         fi
 
         if [ -n "${SNAPSHOT}" ]; then
-                SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY}${SNAPSHOT}"
+                SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY}${NOT_FIRST_SNAP}${SNAPSHOT}"
+                NOT_FIRST_SNAP=","
         fi
 done
 
-SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY}]}"
+SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY} ]}"
 
 echo "${SNAPSHOT_ARRAY}"
