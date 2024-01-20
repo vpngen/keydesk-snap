@@ -91,7 +91,7 @@ if [ "$1" = "pkg" ]; then
         
         constract_version "keydesk-snap"
 
-        keydesk/debpkg/src/build.sh
+        keydesk-snap/debpkg/src/build.sh
 
         exit 0
 fi

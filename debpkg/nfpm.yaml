@@ -9,8 +9,7 @@ release: ${PACKAGE_RELEASE}
 provides:
 - vgkeydesk-snap
 depends:
-- vgkeydesk-snap-access
-- vgkeydesk-snap-auth
+- vgkeydesk-snap-authorities
 
 maintainer: "Ingmund Ollson <ingmund@proton.me>"
 description: VPNGen keydesk snaphot service
