@@ -90,9 +90,7 @@ func CompressEncryptSnapshot(r io.Reader, secret []byte) ([]byte, error) {
 		gw := gzip.NewWriter(wz)
 
 		go func() {
-			defer wz.Close()
 			defer gw.Close()
-			defer gw.Flush()
 
 			for {
 				n, err := io.Copy(gw, r)

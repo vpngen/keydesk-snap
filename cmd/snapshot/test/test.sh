@@ -3,7 +3,7 @@
 set -e
 
 if [ -x "../snapshot" ]; then
-        SNAPSHOT=./snapshot
+        SNAPSHOT=../snapshot
 elif go version >/dev/null 2>&1; then
         SNAPSHOT="go run ../"
 else
