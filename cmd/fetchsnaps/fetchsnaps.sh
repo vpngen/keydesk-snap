@@ -52,7 +52,7 @@ while [ $attempt_count -lt $MAX_ATTEMPTS ]; do
         attempt_count=$((attempt_count + 1))
 
         # Try to read data
-        PSK=$(dd bs=64 count=1 iflag=nonblock status=none 2>/dev/null || true)
+        PSK=$(dd bs=128 count=1 iflag=nonblock status=none 2>/dev/null || true)
 
         # Check if PSK is not empty
         if [ -n "${PSK}" ]; then
@@ -70,6 +70,10 @@ done
 
 if [ -z "${PSK}" ]; then
         fatal "400" "Bad request" "PSK is empty"
+fi
+
+if [ ${#PSK} -lt 24 ]; then
+        fatal "400" "Bad request" "PSK is too short"
 fi
 
 # Continue with the rest of the script
