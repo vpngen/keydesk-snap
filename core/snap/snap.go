@@ -152,8 +152,6 @@ func DecryptDecompressSnapshot(r io.Reader, secret []byte) ([]byte, error) {
 
 				break
 			}
-
-			fmt.Printf("n: %d\n", n)
 		}
 	}()
 
