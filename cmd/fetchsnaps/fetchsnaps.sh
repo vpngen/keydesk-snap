@@ -77,8 +77,7 @@ if [ ${#PSK} -lt 24 ]; then
 fi
 
 # Continue with the rest of the script
-echo "PSK is not empty"
-
+echo "PSK is not empty" >&2
 
 while [ $# -gt 0 ]; do
         case "$1" in
