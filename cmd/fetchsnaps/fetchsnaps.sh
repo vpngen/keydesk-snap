@@ -39,10 +39,45 @@ printdef () {
         fatal "400" "Bad request" "$msg"
 }
 
-PSK=$(dd bs=64 count=1 iflag=nonblock status=none)
+
+# Maximum number of attempts
+MAX_ATTEMPTS=10
+
+# Counter for the number of attempts made
+attempt_count=0
+
+# Loop until we get a non-empty PSK or reach maximum attempts
+while [ $attempt_count -lt $MAX_ATTEMPTS ]; do
+        # Increment the attempt counter
+        attempt_count=$((attempt_count + 1))
+
+        # Try to read data
+        PSK=$(dd bs=128 count=1 iflag=nonblock status=none 2>/dev/null || true)
+
+        # Check if PSK is not empty
+        if [ -n "${PSK}" ]; then
+                break
+        fi
+
+        # Check if we have exceeded the maximum attempts
+        if [ $attempt_count -eq $MAX_ATTEMPTS ]; then
+                fatal "400" "Bad request" "Exceeded maximum attempts PSK reading"
+        fi
+
+        # Sleep for a bit before retrying
+        sleep 1
+done
+
 if [ -z "${PSK}" ]; then
-        printdef "PSK is empty"
+        fatal "400" "Bad request" "PSK is empty"
 fi
+
+if [ ${#PSK} -lt 24 ]; then
+        fatal "400" "Bad request" "PSK is too short"
+fi
+
+# Continue with the rest of the script
+echo "PSK is not empty"
 
 
 while [ $# -gt 0 ]; do
