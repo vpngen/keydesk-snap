@@ -120,8 +120,6 @@ func getSnapshot(opts *CommandOpts, psk []byte) ([]byte, error) {
 		return nil, fmt.Errorf("read authorities keys: %w", err)
 	}
 
-	var errIntegrity error
-
 	data := &storage.Brigade{}
 	filename := filepath.Join(opts.DbDir, storage.BrigadeFilename)
 
@@ -132,39 +130,52 @@ func getSnapshot(opts *CommandOpts, psk []byte) ([]byte, error) {
 
 	defer f.Close()
 
-	pr, pw := io.Pipe()
-	rt := io.TeeReader(f, pw)
+	var (
+		errIntegrity  error
+		encriptedSnap []byte
 
-	wg := &sync.WaitGroup{}
+		wg = &sync.WaitGroup{}
+	)
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	if err := func() error {
+		var err error
 
-		if errIntegrity = json.NewDecoder(pr).Decode(data); errIntegrity != nil {
-			return
+		pr, pw := io.Pipe()
+		defer pw.CloseWithError(io.EOF)
+
+		rt := io.TeeReader(f, pw)
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			if errIntegrity = json.NewDecoder(pr).Decode(data); errIntegrity != nil {
+				return
+			}
+
+			if data.BrigadeID != opts.BrigadeID {
+				errIntegrity = fmt.Errorf("%w: brigade id: %s", storage.ErrWrongStorageConfiguration, opts.BrigadeID)
+
+				return
+			}
+		}()
+
+		encriptedSnap, err = snap.MakeSnapshot(rt, snap.SnapOpts{
+			Tag:          opts.Tag,
+			BrigadeID:    opts.BrigadeID,
+			GlobalSnapAt: opts.GlobalSnapAt,
+			PSK:          psk,
+			RealFP:       opts.RealmFP,
+			RealmKey:     realmKey,
+			AuthKeys:     authKeys,
+		})
+		if err != nil {
+			return fmt.Errorf("snapshot: %w", err)
 		}
 
-		if data.BrigadeID != opts.BrigadeID {
-			errIntegrity = fmt.Errorf("%w: brigade id: %s", storage.ErrWrongStorageConfiguration, opts.BrigadeID)
-
-			return
-		}
-	}()
-
-	encriptedSnap, err := snap.MakeSnapshot(rt, snap.SnapOpts{
-		Tag:          opts.Tag,
-		BrigadeID:    opts.BrigadeID,
-		GlobalSnapAt: opts.GlobalSnapAt,
-		PSK:          psk,
-		RealFP:       opts.RealmFP,
-		RealmKey:     realmKey,
-		AuthKeys:     authKeys,
-	})
-	if err != nil {
-		pr.Close()
-
-		return nil, fmt.Errorf("snapshot: %w", err)
+		return nil
+	}(); err != nil {
+		return nil, fmt.Errorf("make snapshot: %w", err)
 	}
 
 	wg.Wait()
