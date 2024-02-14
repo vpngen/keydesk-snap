@@ -9,6 +9,7 @@ release: ${PACKAGE_RELEASE}
 provides:
 - vgkeydesk-snap
 depends:
+- jq
 - vgkeydesk-snap-authorities
 
 maintainer: "Ingmund Ollson <ingmund@proton.me>"

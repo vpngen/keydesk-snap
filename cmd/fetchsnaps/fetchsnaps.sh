@@ -189,6 +189,9 @@ done
 SNAPSHOT_ARRAY="{ \"snaps\" : ["
 NOT_FIRST_SNAP=" "
 
+total_count=0
+errors_count=0
+
 for brigade_id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
         if [ -z "${DEBUG}" ]; then
                 # shellcheck disable=SC2086
@@ -211,12 +214,18 @@ for brigade_id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
                 )" || echo "Can't create snapshot ${brigade_id}" >&2
         fi
 
-        if [ -n "${SNAPSHOT}" ]; then
-                SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY}${NOT_FIRST_SNAP}${SNAPSHOT}"
-                NOT_FIRST_SNAP=","
+        total_count=$((total_count + 1))
+
+        if [ -z "${SNAPSHOT}" ]; then
+                errors_count=$((errors_count + 1))
+
+                continue
         fi
+
+        SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY}${NOT_FIRST_SNAP}${SNAPSHOT}"
+        NOT_FIRST_SNAP=","
 done
 
-SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY} ]}"
+SNAPSHOT_ARRAY="${SNAPSHOT_ARRAY} ], \"total_count\" : ${total_count}, \"errors_count\" : ${errors_count} }"
 
 echo "${SNAPSHOT_ARRAY}"
