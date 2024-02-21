@@ -3,11 +3,12 @@ package crypto
 import (
 	"bytes"
 	"crypto/rsa"
+	"encoding/pem"
 	"fmt"
 	"path/filepath"
 
-	"github.com/vpngen/keydesk-snap/core"
-	"github.com/vpngen/keydesk-snap/core/helper"
+	snapCore "github.com/vpngen/keydesk-snap/core"
+	snapHelper "github.com/vpngen/keydesk-snap/core/helper"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -17,7 +18,7 @@ func ConvSSHPubKeyToRSAPubKey(key ssh.PublicKey) (*rsa.PublicKey, error) {
 		return nil, ErrKeyNotFound
 	}
 
-	if key.Type() != core.KeyTypeRSA {
+	if key.Type() != snapCore.KeyTypeRSA {
 		return nil, ErrKeyNotRSAKey
 	}
 
@@ -57,7 +58,7 @@ func GetRSAPublicKeysList(data []byte) ([]*RSAPublicKey, error) {
 		// prepare data for next iteration
 		data = bytes.TrimSpace(rest)
 
-		if key.Type() != core.KeyTypeRSA {
+		if key.Type() != snapCore.KeyTypeRSA {
 			continue
 		}
 
@@ -76,7 +77,7 @@ func GetRSAPublicKeysList(data []byte) ([]*RSAPublicKey, error) {
 }
 
 func ReadAuthoritiesPubKeyFile(path string) ([]*RSAPublicKey, error) {
-	data, err := helper.ReadFileSafeSize(filepath.Join(path, DefaultAuthoritiesKeysFileName), core.MaxKeysFileSize)
+	data, err := snapHelper.ReadFileSafeSize(filepath.Join(path, DefaultAuthoritiesKeysFileName), snapCore.MaxKeysFileSize)
 	if err != nil {
 		return nil, fmt.Errorf("read keyfile: %w", err)
 	}
@@ -87,4 +88,32 @@ func ReadAuthoritiesPubKeyFile(path string) ([]*RSAPublicKey, error) {
 	}
 
 	return keys, nil
+}
+
+func ReadPrivateSSHKeyFile(path string) (*rsa.PrivateKey, error) {
+	// Read the private key file
+	pemBytes, err := snapHelper.ReadFileSafeSize(path, snapCore.MaxKeysFileSize)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read private key file: %w", err)
+	}
+
+	// Decode the PEM file
+	block, _ := pem.Decode(pemBytes)
+	if block == nil {
+		return nil, ErrDecodePEM
+	}
+
+	// Convert to ssh.PrivateKey
+	sshKey, err := ssh.ParseRawPrivateKey(pemBytes)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse private key: %w", err)
+	}
+
+	// Assert type to *rsa.PrivateKey
+	rsaKey, ok := sshKey.(*rsa.PrivateKey)
+	if !ok {
+		return nil, ErrNoRSAKey
+	}
+
+	return rsaKey, nil
 }
