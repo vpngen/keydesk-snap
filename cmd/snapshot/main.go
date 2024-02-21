@@ -15,9 +15,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vpngen/keydesk-snap/core"
-	"github.com/vpngen/keydesk-snap/core/crypto"
-	"github.com/vpngen/keydesk-snap/core/snap"
+	snapCore "github.com/vpngen/keydesk-snap/core"
+	snapCrypto "github.com/vpngen/keydesk-snap/core/crypto"
+	snapSnap "github.com/vpngen/keydesk-snap/core/snap"
 	"github.com/vpngen/keydesk/kdlib/lockedfile"
 	"github.com/vpngen/keydesk/keydesk/storage"
 )
@@ -72,7 +72,7 @@ func main() {
 func readPSK() ([]byte, error) {
 	r := base64.NewDecoder(base64.StdEncoding, os.Stdin)
 
-	psk, err := io.ReadAll(io.LimitReader(r, core.PSKSize))
+	psk, err := io.ReadAll(io.LimitReader(r, snapCore.PSKSize))
 	if err != nil {
 		return nil, fmt.Errorf("read: %w", err)
 	}
@@ -110,12 +110,12 @@ func getSnapshot(opts *CommandOpts, psk []byte) ([]byte, error) {
 		}
 	}
 
-	realmKey, err := crypto.FindPubKeyInFile(opts.EtcDir, opts.RealmFP)
+	realmKey, err := snapCrypto.FindPubKeyInFile(filepath.Join(opts.EtcDir, snapCrypto.DefaultRealmsKeysFileName), opts.RealmFP)
 	if err != nil {
 		return nil, fmt.Errorf("find realm key: %w", err)
 	}
 
-	authKeys, err := crypto.ReadAuthoritiesPubKeyFile(opts.EtcDir)
+	authKeys, err := snapCrypto.ReadAuthoritiesPubKeyFile(opts.EtcDir)
 	if err != nil {
 		return nil, fmt.Errorf("read authorities keys: %w", err)
 	}
@@ -160,7 +160,7 @@ func getSnapshot(opts *CommandOpts, psk []byte) ([]byte, error) {
 			}
 		}()
 
-		encriptedSnap, err = snap.MakeSnapshot(rt, snap.SnapOpts{
+		encriptedSnap, err = snapSnap.MakeSnapshot(rt, snapSnap.SnapOpts{
 			Tag:          opts.Tag,
 			BrigadeID:    opts.BrigadeID,
 			GlobalSnapAt: opts.GlobalSnapAt,
