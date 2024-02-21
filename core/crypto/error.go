@@ -1,6 +1,8 @@
 package crypto
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrKeyNotFound     = errors.New("key not found")
@@ -11,4 +13,9 @@ var (
 var (
 	ErrSecretTooLong = errors.New("secret too long")
 	ErrEmptySecret   = errors.New("empty secret")
+)
+
+var (
+	ErrDecodePEM = errors.New("unable to decode pem file")
+	ErrNoRSAKey  = errors.New("not an RSA private key")
 )

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rsa"
 	"fmt"
-	"path/filepath"
 
 	"github.com/vpngen/keydesk-snap/core"
 	"github.com/vpngen/keydesk-snap/core/helper"
@@ -18,7 +17,7 @@ const (
 // FindPubKeyInFile returns the public RSA key by fingerprint
 // from the authorized_keys format file.
 func FindPubKeyInFile(path string, fp string) (*rsa.PublicKey, error) {
-	data, err := helper.ReadFileSafeSize(filepath.Join(path, DefaultRealmsKeysFileName), core.MaxKeysFileSize)
+	data, err := helper.ReadFileSafeSize(path, core.MaxKeysFileSize)
 	if err != nil {
 		return nil, fmt.Errorf("read keyfile: %w", err)
 	}
