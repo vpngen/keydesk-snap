@@ -10,8 +10,8 @@ import (
 	"io"
 	"time"
 
-	"github.com/vpngen/keydesk-snap/core"
-	"github.com/vpngen/keydesk-snap/core/crypto"
+	snapCore "github.com/vpngen/keydesk-snap/core"
+	snapCrypto "github.com/vpngen/keydesk-snap/core/crypto"
 )
 
 type SnapOpts struct {
@@ -21,7 +21,7 @@ type SnapOpts struct {
 	PSK          []byte
 	RealFP       string
 	RealmKey     *rsa.PublicKey
-	AuthKeys     []*crypto.RSAPublicKey
+	AuthKeys     []*snapCrypto.RSAPublicKey
 }
 
 type secretsPack struct {
@@ -44,12 +44,12 @@ func MakeSnapshot(r io.Reader, opts SnapOpts) ([]byte, error) {
 		return nil, fmt.Errorf("gen secrets: %w", err)
 	}
 
-	encryptedLockerSecret, err := crypto.EncryptSecret(opts.RealmKey, secrets.LockerSecret)
+	encryptedLockerSecret, err := snapCrypto.EncryptSecret(opts.RealmKey, secrets.LockerSecret)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt locker secret: %w", err)
 	}
 
-	encryptedSecrets, err := crypto.EncryptSecretForAuthorities(opts.AuthKeys, secrets.Secret)
+	encryptedSecrets, err := snapCrypto.EncryptSecretForAuthorities(opts.AuthKeys, secrets.Secret)
 	if err != nil {
 		return nil, fmt.Errorf("encrypt secrets: %w", err)
 	}
@@ -59,7 +59,7 @@ func MakeSnapshot(r io.Reader, opts SnapOpts) ([]byte, error) {
 		return nil, fmt.Errorf("snapshot: %w", err)
 	}
 
-	encryptedBrigade := &core.EncryptedBrigade{
+	encryptedBrigade := &snapCore.EncryptedBrigade{
 		Tag:       opts.Tag,
 		BrigadeID: opts.BrigadeID,
 
@@ -111,7 +111,7 @@ func CompressEncryptSnapshot(r io.Reader, secret []byte) ([]byte, error) {
 			}
 		}()
 
-		if err := crypto.EncryptAES256CBC(rz, w, secret); err != nil {
+		if err := snapCrypto.EncryptAES256CBC(rz, w, secret); err != nil {
 			return fmt.Errorf("encrypt: %w", err)
 		}
 
@@ -155,7 +155,7 @@ func DecryptDecompressSnapshot(r io.Reader, secret []byte) ([]byte, error) {
 		}
 	}()
 
-	if err := crypto.DecryptAES256CBC(r, wz, secret); err != nil {
+	if err := snapCrypto.DecryptAES256CBC(r, wz, secret); err != nil {
 		return nil, fmt.Errorf("decrypt: %w", err)
 	}
 
@@ -172,12 +172,12 @@ func genSecrets(tag string, id string, gt time.Time, psk []byte) (*secretsPack, 
 
 	lt := time.Now()
 
-	locker, err := crypto.GenSecret(LockerSecretSize)
+	locker, err := snapCrypto.GenSecret(LockerSecretSize)
 	if err != nil {
 		return nil, fmt.Errorf("gen locker secret: %w", err)
 	}
 
-	secret, err := crypto.GenSecret(SecretSize)
+	secret, err := snapCrypto.GenSecret(SecretSize)
 	if err != nil {
 		return nil, fmt.Errorf("gen secret: %w", err)
 	}

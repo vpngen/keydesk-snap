@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/vpngen/keydesk-snap/core"
+	snapCore "github.com/vpngen/keydesk-snap/core"
 )
 
 const (
@@ -27,12 +27,12 @@ type RSAPrivateKeys struct {
 
 // EncryptSecretForAuthorities encrypts the secret with each authority's public key.
 // The result is a map of encrypted secrets and authority fingerprints.
-func EncryptSecretForAuthorities(auths []*RSAPublicKey, secret []byte) (core.EncryptedSecretPair, error) {
+func EncryptSecretForAuthorities(auths []*RSAPublicKey, secret []byte) (snapCore.EncryptedSecretPair, error) {
 	if len(secret) == 0 {
 		return nil, ErrEmptySecret
 	}
 
-	encryptedSecrets := make(core.EncryptedSecretPair)
+	encryptedSecrets := make(snapCore.EncryptedSecretPair)
 
 	for _, auth := range auths {
 		encryptedSecret, err := EncryptSecret(auth.Key, secret)
