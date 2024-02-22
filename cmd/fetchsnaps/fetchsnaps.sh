@@ -7,7 +7,7 @@ SNAP_APP_PATH="/opt/vgkeydesk-snap"
 if [ -x "${SNAP_APP_PATH}/snapshot" ]; then
         SNAP_APP_BIN="${SNAP_APP_PATH}/snapshot"
 elif go version >/dev/null 2>&1; then
-        SNAP_APP_BIN="go run $(dirname "$0")/../snapshot"
+        SNAP_APP_BIN="go run -C $(dirname "$0") ../snapshot/"
 else
         echo "No snap tool found"
         exit 1
