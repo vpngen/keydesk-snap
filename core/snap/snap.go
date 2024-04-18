@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"sync"
 	"time"
 
 	snapCore "github.com/vpngen/keydesk-snap/core"
@@ -84,94 +83,45 @@ func MakeSnapshot(r io.Reader, opts SnapOpts) ([]byte, error) {
 }
 
 func CompressEncryptSnapshot(r io.Reader, secret []byte) ([]byte, error) {
+	buf, err := io.ReadAll(r)
+	if err != nil {
+		return nil, fmt.Errorf("read all: %w", err)
+	}
+
+	rz := &bytes.Buffer{}
+	wz := gzip.NewWriter(rz)
+
+	if _, err := bytes.NewBuffer(buf).WriteTo(wz); err != nil {
+		return nil, fmt.Errorf("write to: %w", err)
+	}
+
+	wz.Flush()
+	wz.Close()
+
 	w := &bytes.Buffer{}
-
-	if err := func() error {
-		rz, wz := io.Pipe()
-		gw := gzip.NewWriter(wz)
-
-		go func() {
-			defer gw.Close()
-
-			for {
-				n, err := io.Copy(gw, r)
-				if err != nil {
-					gw.Flush()
-					wz.CloseWithError(err)
-
-					return
-				}
-
-				if n == 0 {
-					gw.Flush()
-					wz.CloseWithError(io.EOF)
-
-					break
-				}
-
-			}
-		}()
-
-		if err := snapCrypto.EncryptAES256CBC(rz, w, secret); err != nil {
-			return fmt.Errorf("encrypt: %w", err)
-		}
-
-		return nil
-	}(); err != nil {
-		return nil, fmt.Errorf("gzip: %w", err)
+	if err := snapCrypto.EncryptAES256CBC(rz, w, secret); err != nil {
+		return nil, fmt.Errorf("encrypt: %w", err)
 	}
 
 	return w.Bytes(), nil
 }
 
 func DecryptDecompressSnapshot(r io.Reader, secret []byte) ([]byte, error) {
-	w := &bytes.Buffer{}
-
-	rz, wz := io.Pipe()
-
-	// Use a wait group to synchronize goroutines
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-
-	defer wg.Wait()
-
-	go func() {
-		defer wg.Done()
-
-		gw, err := gzip.NewReader(rz)
-		if err != nil {
-			rz.CloseWithError(err)
-
-			return
-		}
-
-		defer rz.Close()
-		defer gw.Close()
-
-		for {
-			n, err := io.Copy(w, gw)
-			if err != nil {
-				rz.CloseWithError(err)
-
-				return
-			}
-
-			if n == 0 {
-				rz.CloseWithError(io.EOF)
-
-				break
-			}
-		}
-	}()
+	wz := &bytes.Buffer{}
 
 	if err := snapCrypto.DecryptAES256CBC(r, wz, secret); err != nil {
-		wz.CloseWithError(err)
-
 		return nil, fmt.Errorf("decrypt: %w", err)
 	}
 
-	wz.Close()
+	rz, err := gzip.NewReader(wz)
+	if err != nil {
+		return nil, fmt.Errorf("gzip: %w", err)
+	}
+
+	w := &bytes.Buffer{}
+	if _, err := w.ReadFrom(rz); err != nil {
+		return nil, fmt.Errorf("read from: %w", err)
+	}
 
 	return w.Bytes(), nil
 }
