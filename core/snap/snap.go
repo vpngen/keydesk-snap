@@ -137,6 +137,8 @@ func DecryptDecompressSnapshot(r io.Reader, secret []byte) ([]byte, error) {
 	defer wg.Wait()
 
 	go func() {
+		defer wg.Done()
+
 		gw, err := gzip.NewReader(rz)
 		if err != nil {
 			rz.CloseWithError(err)
