@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	snapCore "github.com/vpngen/keydesk-snap/core"
@@ -128,6 +129,13 @@ func DecryptDecompressSnapshot(r io.Reader, secret []byte) ([]byte, error) {
 
 	rz, wz := io.Pipe()
 
+	// Use a wait group to synchronize goroutines
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+
+	defer wg.Wait()
+
 	go func() {
 		gw, err := gzip.NewReader(rz)
 		if err != nil {
@@ -156,6 +164,8 @@ func DecryptDecompressSnapshot(r io.Reader, secret []byte) ([]byte, error) {
 	}()
 
 	if err := snapCrypto.DecryptAES256CBC(r, wz, secret); err != nil {
+		wz.CloseWithError(err)
+
 		return nil, fmt.Errorf("decrypt: %w", err)
 	}
 
