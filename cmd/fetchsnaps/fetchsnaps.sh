@@ -193,6 +193,8 @@ total_count=0
 errors_count=0
 
 for brigade_id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
+        error=""
+
         if [ -z "${DEBUG}" ]; then
                 # shellcheck disable=SC2086
                 SNAPSHOT="$(printf "%s" "$PSK" | sudo -u "${brigade_id}" -g "${brigade_id}" ${SNAP_APP_BIN} \
@@ -200,7 +202,7 @@ for brigade_id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
                         -stime "${SNAP_AT}" \
                         -rfp "${REALM_FP}" \
                         ${MNT_ARG} \
-                )" || echo "Can't create snapshot ${brigade_id}" >&2
+                )" || error="Can't create snapshot ${brigade_id}"
         else
                 # shellcheck disable=SC2086
                 SNAPSHOT="$(printf "%s" "$PSK" | ${SNAP_APP_BIN} \
@@ -211,13 +213,14 @@ for brigade_id in $(printf "%s" "${BRIGADES}" | tr ',' ' '); do
                         ${DB_DIR} \
                         ${CONF_DIR} \
                         ${MNT_ARG} \
-                )" || echo "Can't create snapshot ${brigade_id}" >&2
+                )" || error="Can't create snapshot ${brigade_id}"
         fi
 
         total_count=$((total_count + 1))
 
-        if [ -z "${SNAPSHOT}" ]; then
+        if [ -n "${error}" ]; then
                 errors_count=$((errors_count + 1))
+                echo "Error: ${error}" >&2
 
                 continue
         fi
