@@ -5,8 +5,8 @@ go 1.22
 toolchain go1.22.4
 
 require (
-	github.com/vpngen/keydesk v1.9.10-0.20241007042835-599d38a1bad9
-	golang.org/x/crypto v0.26.0
+	github.com/vpngen/keydesk v1.9.10-0.20241007042859-ae51fab868d3
+	golang.org/x/crypto v0.28.0
 )
 
 require (
@@ -19,5 +19,5 @@ require (
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/vpngen/vpngine v0.1.1 // indirect
 	github.com/vpngen/wordsgens v1.0.4 // indirect
-	golang.org/x/sys v0.24.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 )
